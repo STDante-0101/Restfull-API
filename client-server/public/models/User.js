@@ -106,34 +106,48 @@ class User {
 
     }
 
+    toJSON(){
+
+        let json = {};
+
+        Object.keys(this).forEach(key => {
+
+            if (this[key] !== undefined) json[key] = this[key];
+
+        });
+
+        return json;
+
+    }
+
     save(){
 
-        let users = User.getUsersStorage();
+        return new Promise((resolve, reject)=>{
 
-        if (this.id > 0) {
-            
-            users.map(u=>{
+            let promise;
 
-                if (u._id == this.id) {
+            if (this.id) {
 
-                    Object.assign(u, this);
+                promise = HttpRequest.put(`/users/${this.id}`, this.toJSON());
 
-                }
+            } else {
 
-                return u;
+                promise = HttpRequest.post(`/users`, this.toJSON());
 
-            });
+            }
 
-        } else {
+            promise.then(data => {
 
-            this._id = this.getNewID();
+                this.loadFromJSON(data);
 
-            users.push(this);
+                resolve(this);
 
-        }
+            }).catch(e=>{
 
-        localStorage.setItem("users", JSON.stringify(users));
+                reject(e);
 
+            })
+        });  
     }
 
     remove(){
